@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict
 class DocumentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
-    id: int
+    id: str
 
     original_filename: str
     stored_filename: str

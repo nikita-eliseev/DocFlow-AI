@@ -35,4 +35,4 @@ async def upload_pdf(
     db.commit()
     db.refresh(document)
     
-    return document
+    return DocumentResponse.model_validate(document)
