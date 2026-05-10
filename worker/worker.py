@@ -4,6 +4,7 @@ from app.core.status import Status
 from app.models.documents import Document
 from sqlalchemy import select
 from app.utils.pdf import extract_text
+from app.core.loger import logger
 
 def process_documents():
     while True:
@@ -17,7 +18,7 @@ def process_documents():
             document = db.execute(stmt).scalars().first()
             
             if document:
-                print(f"Processing: {document.id}")
+                logger.info(f"Processing: {document.id}")
                 
                 document.status = Status.processing
                 
@@ -27,17 +28,24 @@ def process_documents():
                 time.sleep(5)
                 
                 file_path = f"uploads/{document.stored_filename}"
-                text = extract_text(file_path=file_path)
+                try:
+                    text = extract_text(file_path=file_path)
+                except Exception:
+                        logger.exception(f"PDF parsing failed for {document.id}")
+                        document.status = Status.failed
+                        db.commit()
+                        continue
+                        
                 document.summary = text[:500]
                 
                 document.status = Status.completed
                 
                 db.commit()
                 
-                print(f"Completed: {document.id}")
+                logger.info(f"Completed: {document.id}")
 
             else:
-                print("No pending documents")
+                logger.warning("No pending documents")
                 
         finally:
             db.close()
