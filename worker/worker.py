@@ -5,6 +5,7 @@ from app.models.documents import Document
 from sqlalchemy import select
 from app.utils.pdf import extract_text
 from app.core.loger import logger
+from pathlib import Path
 
 def process_documents():
     while True:
@@ -27,7 +28,8 @@ def process_documents():
                 ###
                 time.sleep(5)
                 
-                file_path = f"uploads/{document.stored_filename}"
+                file_path = Path("uploads") / document.stored_filename
+                
                 try:
                     text = extract_text(file_path=file_path)
                 except Exception:
