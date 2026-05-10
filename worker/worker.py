@@ -1,9 +1,9 @@
+import time
 from app.core.database import SessionLocal
 from app.core.status import Status
 from app.models.documents import Document
 from sqlalchemy import select
-import time
-
+from app.utils.pdf import extract_text
 
 def process_documents():
     while True:
@@ -26,7 +26,9 @@ def process_documents():
                 ###
                 time.sleep(5)
                 
-                document.summary = "Fake AI summary"
+                file_path = f"uploads/{document.stored_filename}"
+                text = extract_text(file_path=file_path)
+                document.summary = text[:500]
                 
                 document.status = Status.completed
                 
