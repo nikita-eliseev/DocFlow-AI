@@ -1,0 +1,47 @@
+services:
+
+  db:
+    image: postgres:16
+    container_name: docflow_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: postgres
+    ports:
+      - "5555:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: docflow_api
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  worker:
+    build: .
+    container_name: docflow_worker
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - db
+    command: python -m worker.worker
+  
+  migrations:
+    build: .
+    env_file:
+      - .env
+    depends_on:
+      - db
+    command: alembic upgrade head
+
+volumes:
+  pgdata:
