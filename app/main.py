@@ -1,5 +1,4 @@
 from contextlib import asynccontextmanager
-from app.models.documents import Document
 from fastapi import FastAPI
 from app.api.routes.documents import router as docs_router
 from app.core.database import Base

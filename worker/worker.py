@@ -3,6 +3,7 @@ from app.core.database import SessionLocal
 from app.core.status import Status
 from app.models.documents import Document
 from sqlalchemy import select
+from app.services.ai_service import AIService
 from app.utils.pdf import extract_text
 from app.core.loger import logger
 from pathlib import Path
@@ -25,7 +26,6 @@ def process_documents():
                 
                 db.commit()
                 
-                ###
                 time.sleep(5)
                 
                 file_path = Path("uploads") / document.stored_filename
@@ -37,8 +37,10 @@ def process_documents():
                         document.status = Status.failed
                         db.commit()
                         continue
-                        
-                document.summary = text[:500]
+                    
+                ai_service = AIService()
+                summary = ai_service.summarize_text(text)
+                document.summary = summary
                 
                 document.status = Status.completed
                 
