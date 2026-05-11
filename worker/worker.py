@@ -3,10 +3,10 @@ from app.core.database import SessionLocal
 from app.core.status import Status
 from app.models.documents import Document
 from sqlalchemy import select
-from app.services.ai_service import AIService
 from app.utils.pdf import extract_text
 from app.core.loger import logger
 from pathlib import Path
+
 
 def process_documents():
     while True:
@@ -38,9 +38,7 @@ def process_documents():
                         db.commit()
                         continue
                     
-                ai_service = AIService()
-                summary = ai_service.summarize_text(text)
-                document.summary = summary
+                document.summary = text[:300]
                 
                 document.status = Status.completed
                 

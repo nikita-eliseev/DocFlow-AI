@@ -2,7 +2,7 @@ import os
 import shutil
 from uuid import uuid4
 
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile, status
 
 from sqlalchemy.orm import Session
 
@@ -34,6 +34,21 @@ class DocService:
         self.db.refresh(document)
 
         return DocumentResponse.model_validate(document)
+    
+    def get_document(self, document_id: str) -> DocumentResponse:
+        document = self.docrepository.get_by_id(document_id=document_id)
+        
+        if not document:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Document not found"
+            )
+        return DocumentResponse.model_validate(document)
+    
+    def get_documents(self) -> list[DocumentResponse]:
+        docs = self.docrepository.get_all()
+        
+        return [DocumentResponse.model_validate(doc) for doc in docs]
         
         
         

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from sqlalchemy import select
 from app.models.documents import Document
 
 class DocRepository:
@@ -16,3 +16,13 @@ class DocRepository:
         self.db.flush()  
 
         return document
+    
+    def get_by_id(self, document_id: str) -> Document | None:
+        stmt = select(Document).where(Document.id == document_id)
+        return self.db.execute(stmt).scalars().first()
+    
+    def get_all(self) -> list[Document]:
+        stmt = select(Document)
+        return list(
+            self.db.execute(stmt).scalars().all()
+        )
