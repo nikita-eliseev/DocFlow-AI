@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories.documents import DocRepository
 from app.schemas.documents import DocumentResponse
-
+from worker.tasks import process_document
 
 class DocService:
     def __init__(self, db: Session):
@@ -32,6 +32,8 @@ class DocService:
 
         self.db.commit()
         self.db.refresh(document)
+        
+        process_document.delay(document.id)
 
         return DocumentResponse.model_validate(document)
     

@@ -12,11 +12,21 @@ services:
       - "5532:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: docflow_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
       retries: 10
 
   api:
@@ -27,13 +37,15 @@ services:
       - "8000:8000"
     env_file:
       - .env
-
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       migrations:
         condition: service_completed_successfully
-
+    volumes:
+      - ./uploads_data:/app/uploads
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   worker:
@@ -43,8 +55,13 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
-    command: python -m worker.worker
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./uploads_data:/app/uploads
+    command: celery -A app.core.celery.celery_app worker --loglevel=info
 
   migrations:
     build: .
@@ -57,3 +74,4 @@ services:
 
 volumes:
   pgdata:
+  uploads_data:
