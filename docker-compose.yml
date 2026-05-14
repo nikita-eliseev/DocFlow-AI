@@ -9,9 +9,15 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: postgres
     ports:
-      - "5555:5432"
+      - "5532:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api:
     build: .
@@ -21,8 +27,13 @@ services:
       - "8000:8000"
     env_file:
       - .env
+
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   worker:
@@ -34,13 +45,14 @@ services:
     depends_on:
       - db
     command: python -m worker.worker
-  
+
   migrations:
     build: .
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: alembic upgrade head
 
 volumes:
