@@ -30,13 +30,13 @@ services:
       retries: 10
 
   api:
-    build: .
+    build: ./backend
     container_name: docflow_api
     restart: always
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - backend/.env
     depends_on:
       db:
         condition: service_healthy
@@ -49,11 +49,15 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   worker:
-    build: .
+    build: ./backend
     container_name: docflow_worker
     restart: always
+
+    user: "1000:1000"
+
+
     env_file:
-      - .env
+      - backend/.env
     depends_on:
       db:
         condition: service_healthy
@@ -64,9 +68,9 @@ services:
     command: celery -A app.core.celery.celery_app worker --loglevel=info
 
   migrations:
-    build: .
+    build: ./backend
     env_file:
-      - .env
+      - backend/.env
     depends_on:
       db:
         condition: service_healthy

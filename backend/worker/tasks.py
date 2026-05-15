@@ -9,6 +9,8 @@ from app.core.locks import acquire_lock, release_lock
 from pathlib import Path
 
 
+UPLOAD_DIR = Path("/app/uploads")
+
 @celery_app.task(
     bind=True,
     autoretry_for=(Exception,),
@@ -74,7 +76,7 @@ def process_document(self, document_id: str):
             extra={"document_id": document_id},
         )
 
-        file_path = Path("uploads") / document.stored_filename
+        file_path = UPLOAD_DIR / document.stored_filename
 
         logger.info(
             "pdf_extraction_started",
